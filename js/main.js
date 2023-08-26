@@ -10,3 +10,4 @@ let gameState = GAME_STATUS.PLAYING
 // 3. Check win logic
 // 4. Add timer
 // 5. Handle replay click
+console.log('hi')
