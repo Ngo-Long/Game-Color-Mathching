@@ -34,6 +34,7 @@
 }
 
 .game__timer {
+  height: 25px;
   margin-top: 0.5rem;
   text-align: center;
   font-size: 1.5rem;

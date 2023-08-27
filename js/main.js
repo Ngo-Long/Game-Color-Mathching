@@ -73,23 +73,19 @@ function handleColorElementList(liElement) {
   // check selections
   const firstColor = selections[0].dataset.color;
   const secondColor = selections[1].dataset.color;
-  const isMach = firstColor === secondColor;
 
-  console.log(liElement, selections);
-  checkIsMach(isMach);
+  const isMach = firstColor === secondColor;
+  checkIsMach(isMach, firstColor);
 }
 
-function checkIsMach(isMach) {
+function checkIsMach(isMach, firstColor) {
   // if mach true
   if (isMach) {
-    // check win game
-    const isWin = getInActiveColorList().length === 0;
-    if (isWin) {
-      setTimeoutText('You Win');
-      displayPlayAgainButton();
+    checkWinGame();
 
-      gameStatus = GAME_STATUS.FINISHED;
-    }
+    // change the background color by 2 pairs of the same color
+    const colorBackground = getColorBackground();
+    if (colorBackground) colorBackground.style.backgroundColor = firstColor;
 
     // reset selections for the next turn
     selections = [];
@@ -110,9 +106,24 @@ function checkIsMach(isMach) {
   }, 500);
 }
 
+function checkWinGame() {
+  const isWin = getInActiveColorList().length === 0;
+  if (isWin) {
+    setTimeoutText('You Win');
+    displayPlayAgainButton();
+
+    gameStatus = GAME_STATUS.FINISHED;
+  }
+}
+
 function displayPlayAgainButton() {
   const playGameButton = getPlayAgainButton();
-  if (playGameButton) playGameButton.style.display = 'block';
+  if (playGameButton) playGameButton.classList.add('show');
+}
+
+function hiddenPlayAgainButton() {
+  const playGameButton = getPlayAgainButton();
+  if (playGameButton) playGameButton.classList.remove('show');
 }
 
 function setTimeoutText(text) {
@@ -124,13 +135,30 @@ function setTimeoutText(text) {
 function attachEventForPlayAgainButton() {
   // display play again button
   const playAgainButton = getPlayAgainButton();
-  if (playAgainButton) playAgainButton.addEventListener('click', resetGame());
+  if (playAgainButton) playAgainButton.addEventListener('click', resetGame);
 }
 
 function resetGame() {
   // Global variables
-  let selections = [];
-  let gameStatus = GAME_STATUS.PLAYING;
+  selections = [];
+  gameStatus = GAME_STATUS.PLAYING;
 
   // reset DOM elements
+  hiddenPlayAgainButton();
+  setTimeoutText('');
+
+  // clear class active
+  clearClassActiveColorList();
+
+  // color change
+  initColorList();
+}
+
+function clearClassActiveColorList() {
+  const colorElementItem = getColorElementList();
+  if (!colorElementItem) return;
+
+  colorElementItem.forEach((liElement) => {
+    liElement.classList.remove('active');
+  });
 }
