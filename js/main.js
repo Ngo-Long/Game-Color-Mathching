@@ -28,6 +28,9 @@ let gameStatus = GAME_STATUS.PLAYING;
 
   // event play agin
   attachEventForPlayAgainButton();
+
+  // count time down
+  countTimeDown();
 })();
 
 // init
@@ -152,6 +155,8 @@ function resetGame() {
 
   // color change
   initColorList();
+
+  countTimeDown();
 }
 
 function clearClassActiveColorList() {
@@ -161,4 +166,30 @@ function clearClassActiveColorList() {
   colorElementItem.forEach((liElement) => {
     liElement.classList.remove('active');
   });
+}
+
+// count time down
+function countTimeDown() {
+  let second = 30;
+
+  let checkSecond = setInterval(() => {
+    if (second === 0) {
+      clearInterval(checkSecond);
+      setTimeoutText('GAME OVER!!!');
+
+      displayPlayAgainButton();
+    }
+
+    if (second > 0) {
+      setTimeoutText(second);
+      second--;
+      console.log(second);
+    }
+
+    checkWinGame();
+
+    // if (gameStatus !== GAME_STATUS.PLAYING) {
+    //   clearInterval(checkSecond);
+    // }
+  }, 1000);
 }
