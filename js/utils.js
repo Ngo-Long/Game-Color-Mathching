@@ -1,4 +1,4 @@
-export const getRandomColorPairs = (count) => {
+export function getRandomColorPairs(count) {
   // receive count --> return count * 2 random colors
   // using lib: https://github.com/davidmerfield/randomColor
   const colorList = [];
@@ -21,7 +21,7 @@ export const getRandomColorPairs = (count) => {
   colorPositionShuffle(fullColorList);
 
   return fullColorList;
-};
+}
 
 function colorPositionShuffle(arr) {
   if (!Array.isArray(arr) || arr.length <= 2) return arr;
@@ -35,4 +35,35 @@ function colorPositionShuffle(arr) {
   }
 
   return arr;
+}
+
+export function createTimer({ seconds, onChange, onFinish }) {
+  let intervalId = null;
+
+  // start
+  function start() {
+    clear();
+
+    let currentSecond = seconds;
+    intervalId = setInterval(() => {
+      onChange?.(currentSecond);
+
+      currentSecond--;
+
+      if (currentSecond < 0) {
+        clear();
+        onFinish?.();
+      }
+    }, 1000);
+  }
+
+  // clear
+  function clear() {
+    clearInterval(intervalId);
+  }
+
+  return {
+    start,
+    clear,
+  };
 }

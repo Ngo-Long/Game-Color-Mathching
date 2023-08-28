@@ -1,5 +1,5 @@
-import { GAME_STATUS, PAIRS_COUNT } from './constants.js';
-import { getRandomColorPairs } from './utils.js';
+import { GAME_STATUS, PAIRS_COUNT, GAME_TIME } from './constants.js';
+import { getRandomColorPairs, createTimer } from './utils.js';
 import {
   getTimerElement,
   getPlayAgainButton,
@@ -12,7 +12,51 @@ import {
 // Global variables
 let selections = [];
 let gameStatus = GAME_STATUS.PLAYING;
+let timer = createTimer({
+  seconds: GAME_TIME,
+  onChange: handleTimerChange,
+  onFinish: handleTimerFinish,
+});
 
+function handleTimerChange(second) {
+  const fullSecond = `0${second}`.slice(-2);
+  setTimeoutText(fullSecond);
+}
+
+function handleTimerFinish() {
+  gameStatus = GAME_STATUS.FINISHED;
+
+  setTimeoutText('GAME OVER!!!');
+
+  showPlayAgainButton();
+}
+
+// count time down
+// function countTimeDown() {
+//   let second = 30;
+
+//   let checkSecond = setInterval(() => {
+//     if (second === 0) {
+//       clearInterval(checkSecond);
+
+//       setTimeoutText('GAME OVER!!!');
+
+//       showPlayAgainButton();
+
+//       // prevent click when end game
+//       gameStatus = GAME_STATUS.FINISHED;
+//     } else {
+//       setTimeoutText(second);
+//       second--;
+//     }
+
+//     checkWinGame();
+
+//     if (isEndGame) clearInterval(checkSecond);
+//   }, 100);
+// }
+
+// function handleTimerChange()
 // TODOs
 // 1. Generating colors using https://github.com/davidmerfield/randomColor
 // 2. Attach item click for all li elements
@@ -21,23 +65,20 @@ let gameStatus = GAME_STATUS.PLAYING;
 // 5. Handle replay click
 
 (() => {
-  // init
+  startTimer();
   initColorList();
-
   attachEventForColorList();
-
-  // event play agin
   attachEventForPlayAgainButton();
-
-  // count time down
-  countTimeDown();
 })();
 
-// init
+function startTimer() {
+  timer.start();
+}
+
 function initColorList() {
   const colorList = getRandomColorPairs(PAIRS_COUNT);
 
-  // add each class index
+  // add each class color
   const colorElementItem = getColorElementList();
   if (!colorElementItem) return;
 
@@ -49,6 +90,7 @@ function initColorList() {
   });
 }
 
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 function attachEventForColorList() {
   const ulElement = getUlColorElementList();
   if (!ulElement) return;
@@ -105,21 +147,26 @@ function checkIsMach(isMach, firstColor) {
     // reset selections for the next turn
     selections = [];
 
-    gameStatus = GAME_STATUS.PLAYING;
+    // race-condition check with handleTimerFinish()
+    if (gameStatus !== GAME_STATUS.FINISHED) {
+      gameStatus = GAME_STATUS.PLAYING;
+    }
   }, 500);
 }
 
 function checkWinGame() {
   const isWin = getInActiveColorList().length === 0;
   if (isWin) {
-    setTimeoutText('You Win');
-    displayPlayAgainButton();
+    setTimeoutText('YOU WIN 💪👏');
+    showPlayAgainButton();
 
     gameStatus = GAME_STATUS.FINISHED;
+
+    timer.clear();
   }
 }
 
-function displayPlayAgainButton() {
+function showPlayAgainButton() {
   const playGameButton = getPlayAgainButton();
   if (playGameButton) playGameButton.classList.add('show');
 }
@@ -134,9 +181,8 @@ function setTimeoutText(text) {
   if (timerElement) timerElement.textContent = text;
 }
 
-// event play agin
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 function attachEventForPlayAgainButton() {
-  // display play again button
   const playAgainButton = getPlayAgainButton();
   if (playAgainButton) playAgainButton.addEventListener('click', resetGame);
 }
@@ -146,17 +192,11 @@ function resetGame() {
   selections = [];
   gameStatus = GAME_STATUS.PLAYING;
 
-  // reset DOM elements
-  hiddenPlayAgainButton();
+  hiddenPlayAgainButton(); // reset DOM elements
   setTimeoutText('');
-
-  // clear class active
   clearClassActiveColorList();
-
-  // color change
-  initColorList();
-
-  countTimeDown();
+  initColorList(); // color change
+  startTimer();
 }
 
 function clearClassActiveColorList() {
@@ -166,30 +206,4 @@ function clearClassActiveColorList() {
   colorElementItem.forEach((liElement) => {
     liElement.classList.remove('active');
   });
-}
-
-// count time down
-function countTimeDown() {
-  let second = 30;
-
-  let checkSecond = setInterval(() => {
-    if (second === 0) {
-      clearInterval(checkSecond);
-      setTimeoutText('GAME OVER!!!');
-
-      displayPlayAgainButton();
-    }
-
-    if (second > 0) {
-      setTimeoutText(second);
-      second--;
-      console.log(second);
-    }
-
-    checkWinGame();
-
-    // if (gameStatus !== GAME_STATUS.PLAYING) {
-    //   clearInterval(checkSecond);
-    // }
-  }, 1000);
 }
