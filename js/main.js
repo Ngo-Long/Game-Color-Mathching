@@ -31,39 +31,7 @@ function handleTimerFinish() {
   showPlayAgainButton();
 }
 
-// count time down
-// function countTimeDown() {
-//   let second = 30;
-
-//   let checkSecond = setInterval(() => {
-//     if (second === 0) {
-//       clearInterval(checkSecond);
-
-//       setTimeoutText('GAME OVER!!!');
-
-//       showPlayAgainButton();
-
-//       // prevent click when end game
-//       gameStatus = GAME_STATUS.FINISHED;
-//     } else {
-//       setTimeoutText(second);
-//       second--;
-//     }
-
-//     checkWinGame();
-
-//     if (isEndGame) clearInterval(checkSecond);
-//   }, 100);
-// }
-
-// function handleTimerChange()
-// TODOs
-// 1. Generating colors using https://github.com/davidmerfield/randomColor
-// 2. Attach item click for all li elements
-// 3. Check win logic
-// 4. Add timer
-// 5. Handle replay click
-
+// main
 (() => {
   startTimer();
   initColorList();
