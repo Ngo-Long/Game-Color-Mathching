@@ -1,12 +1,9 @@
 export function getRandomColorPairs(count) {
-  // receive count --> return count * 2 random colors
-  // using lib: https://github.com/davidmerfield/randomColor
-  const colorList = [];
-  const hueList = ['red', 'orange', 'yellow', 'green', 'blue', 'purple', 'pink', 'monochrome'];
+  let colorList = [];
+  const hueList = ['red', 'blue', 'green', 'pink', 'orange', 'yellow', 'gray', 'purple'];
 
   for (let i = 0; i < count; i++) {
-    // randomColor function is provided by https://github.com/davidmerfield/randomColor
-    const color = window.randomColor({
+    let color = randomColor({
       luminosity: 'dark',
       format: hueList[i % hueList.length],
     });
@@ -14,10 +11,7 @@ export function getRandomColorPairs(count) {
     colorList.push(color);
   }
 
-  // double current color list
   const fullColorList = [...colorList, ...colorList];
-
-  // shuffle it
   colorPositionShuffle(fullColorList);
 
   return fullColorList;
@@ -26,7 +20,7 @@ export function getRandomColorPairs(count) {
 function colorPositionShuffle(arr) {
   if (!Array.isArray(arr) || arr.length <= 2) return arr;
 
-  for (let i = arr.length - 1; i > 1; i--) {
+  for (let i = arr.length - 1; i > 0; i--) {
     let j = Math.floor(Math.random() * i);
 
     let temp = arr[i];
@@ -40,8 +34,7 @@ function colorPositionShuffle(arr) {
 export function createTimer({ seconds, onChange, onFinish }) {
   let intervalId = null;
 
-  // start
-  function start() {
+  const start = () => {
     clear();
 
     let currentSecond = seconds;
@@ -55,12 +48,9 @@ export function createTimer({ seconds, onChange, onFinish }) {
         onFinish?.();
       }
     }, 1000);
-  }
+  };
 
-  // clear
-  function clear() {
-    clearInterval(intervalId);
-  }
+  const clear = () => clearInterval(intervalId);
 
   return {
     start,

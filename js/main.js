@@ -1,5 +1,5 @@
-import { GAME_STATUS, PAIRS_COUNT, GAME_TIME } from './constants.js';
 import { getRandomColorPairs, createTimer } from './utils.js';
+import { GAME_STATUS, PAIRS_COUNT, GAME_TIME } from './constants.js';
 import {
   getTimerElement,
   getPlayAgainButton,
@@ -9,34 +9,38 @@ import {
   getUlColorElementList,
 } from './selectors.js';
 
-// Global variables
+// valid common
 let selections = [];
 let gameStatus = GAME_STATUS.PLAYING;
 let timer = createTimer({
   seconds: GAME_TIME,
-  onChange: handleTimerChange,
+  onChange: handleTimerChane,
   onFinish: handleTimerFinish,
 });
 
-function handleTimerChange(second) {
-  const fullSecond = `0${second}`.slice(-2);
-  setTimeoutText(fullSecond);
+function handleTimerChane(second) {
+  let currentSecond = `0${second}`.slice(-2);
+  textTimerElement(currentSecond);
 }
 
 function handleTimerFinish() {
-  gameStatus = GAME_STATUS.FINISHED;
-
-  setTimeoutText('GAME OVER!!!');
-
   showPlayAgainButton();
+
+  textTimerElement('GAME OVER!!!');
+
+  gameStatus = GAME_STATUS.FINISHED;
 }
 
 // main
 (() => {
   startTimer();
+
+  // change color list
   initColorList();
-  attachEventForColorList();
-  attachEventForPlayAgainButton();
+
+  initColorListElement();
+
+  attachEventPlayAgainButton();
 })();
 
 function startTimer() {
@@ -44,134 +48,147 @@ function startTimer() {
 }
 
 function initColorList() {
-  const colorList = getRandomColorPairs(PAIRS_COUNT);
+  const colorPairs = getRandomColorPairs(PAIRS_COUNT);
+  if (!colorPairs) return;
 
-  // add each class color
-  const colorElementItem = getColorElementList();
-  if (!colorElementItem) return;
+  const colorList = getColorElementList();
+  if (!colorList) return;
 
-  colorElementItem.forEach((liElement, index) => {
-    liElement.dataset.color = colorList[index];
+  colorList.forEach((colorItem, index) => {
+    // attach data-color
+    colorItem.dataset.color = colorPairs[index];
 
-    const overlayElement = liElement.querySelector('.overlay');
-    if (overlayElement) overlayElement.style.backgroundColor = colorList[index];
+    // attach background color
+    const overlayElement = colorItem.querySelector('.overlay');
+    if (overlayElement) overlayElement.style.backgroundColor = colorPairs[index];
   });
 }
 
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-function attachEventForColorList() {
-  const ulElement = getUlColorElementList();
-  if (!ulElement) return;
+function initColorListElement() {
+  const colorElementList = getUlColorElementList();
+  if (!colorElementList) return;
 
-  ulElement.addEventListener('click', (e) => {
-    const liElement = e.target;
-    if (liElement.tagName !== 'LI') return;
+  colorElementList.addEventListener('click', (e) => {
+    let colorElementItem = e.target;
+    if (colorElementItem.tagName !== 'LI') return;
 
-    handleColorElementList(liElement);
+    handleEventColorList(colorElementItem);
   });
 }
 
-function handleColorElementList(liElement) {
-  const shouldBlockClick = [GAME_STATUS.BLOCKING, GAME_STATUS.FINISHED].includes(gameStatus);
-  const isClicked = liElement.classList.contains('active');
-  if (!liElement || isClicked || shouldBlockClick) return;
+function handleEventColorList(colorElementItem) {
+  const isClicked = colorElementItem.classList.contains('active');
+  const isCheckStatus = [GAME_STATUS.BLOCKING, GAME_STATUS.FINISHED].includes(gameStatus);
+  if (isClicked || isCheckStatus) return;
 
-  // show color for clicked cell
-  liElement.classList.add('active');
+  // show color
+  colorElementItem.classList.add('active');
 
-  // save clicked cell to selections
-  selections.push(liElement);
+  // check pairs color in selections
+  selections.push(colorElementItem);
+
   if (selections.length < 2) return;
-
-  // check selections
   const firstColor = selections[0].dataset.color;
   const secondColor = selections[1].dataset.color;
 
-  const isMach = firstColor === secondColor;
-  checkIsMach(isMach, firstColor);
+  const isGameColor = firstColor === secondColor;
+  checkColorPairs(isGameColor, firstColor);
 }
 
-function checkIsMach(isMach, firstColor) {
-  // if mach true
-  if (isMach) {
-    checkWinGame();
+function checkColorPairs(isSameColor, color) {
+  // if true
+  if (isSameColor) {
+    // change background color if same color
+    const colorBackgroundElement = getColorBackground();
+    if (colorBackgroundElement) colorBackgroundElement.style.backgroundColor = color;
 
-    // change the background color by 2 pairs of the same color
-    const colorBackground = getColorBackground();
-    if (colorBackground) colorBackground.style.backgroundColor = firstColor;
-
-    // reset selections for the next turn
+    // reset selection for next time
     selections = [];
+
+    checkWinGame();
     return;
   }
 
-  // if mach false
-  gameStatus = GAME_STATUS.BLOCKING;
-  setTimeout(() => {
-    // remove class 'active' for 2 li element
-    selections[0].classList.remove('active');
-    selections[1].classList.remove('active');
+  // if false
+  else {
+    // prevent event
+    gameStatus = GAME_STATUS.BLOCKING;
 
-    // reset selections for the next turn
-    selections = [];
+    setTimeout(() => {
+      // hidden color
+      selections[0].classList.remove('active');
+      selections[1].classList.remove('active');
 
-    // race-condition check with handleTimerFinish()
-    if (gameStatus !== GAME_STATUS.FINISHED) {
-      gameStatus = GAME_STATUS.PLAYING;
-    }
-  }, 500);
+      // reset selection for next time
+      selections = [];
+
+      // race-condition if win game
+      if (gameStatus !== GAME_STATUS.FINISHED) {
+        gameStatus = GAME_STATUS.PLAYING;
+      }
+    }, 500);
+  }
 }
 
 function checkWinGame() {
-  const isWin = getInActiveColorList().length === 0;
-  if (isWin) {
-    setTimeoutText('YOU WIN 💪👏');
-    showPlayAgainButton();
+  const activeColorList = getInActiveColorList();
+  if (!activeColorList) return;
 
+  if (activeColorList.length === 0) {
+    textTimerElement('WIN GAME <3');
+    showPlayAgainButton();
     gameStatus = GAME_STATUS.FINISHED;
 
     timer.clear();
   }
 }
 
+function textTimerElement(text) {
+  const textElement = getTimerElement();
+  if (textElement) textElement.textContent = text;
+}
+
 function showPlayAgainButton() {
-  const playGameButton = getPlayAgainButton();
-  if (playGameButton) playGameButton.classList.add('show');
+  const playAgainElementButton = getPlayAgainButton();
+  if (playAgainElementButton) {
+    playAgainElementButton.classList.add('show');
+  }
 }
 
 function hiddenPlayAgainButton() {
-  const playGameButton = getPlayAgainButton();
-  if (playGameButton) playGameButton.classList.remove('show');
+  const playAgainElementButton = getPlayAgainButton();
+  if (playAgainElementButton) {
+    playAgainElementButton.classList.remove('show');
+  }
 }
 
-function setTimeoutText(text) {
-  const timerElement = getTimerElement();
-  if (timerElement) timerElement.textContent = text;
-}
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-function attachEventForPlayAgainButton() {
-  const playAgainButton = getPlayAgainButton();
-  if (playAgainButton) playAgainButton.addEventListener('click', resetGame);
+function attachEventPlayAgainButton() {
+  const playAgainElementButton = getPlayAgainButton();
+  if (playAgainElementButton) {
+    playAgainElementButton.addEventListener('click', resetGame);
+  }
 }
 
 function resetGame() {
-  // Global variables
+  // valid common
   selections = [];
   gameStatus = GAME_STATUS.PLAYING;
 
-  hiddenPlayAgainButton(); // reset DOM elements
-  setTimeoutText('');
-  clearClassActiveColorList();
-  initColorList(); // color change
   startTimer();
+
+  // change color list
+  initColorList();
+  textTimerElement('');
+  hiddenPlayAgainButton();
+
+  clearClassActiveElementList();
 }
 
-function clearClassActiveColorList() {
-  const colorElementItem = getColorElementList();
-  if (!colorElementItem) return;
+function clearClassActiveElementList() {
+  const colorList = getColorElementList();
+  if (!colorList) return;
 
-  colorElementItem.forEach((liElement) => {
-    liElement.classList.remove('active');
+  colorList.forEach((colorItem) => {
+    colorItem.classList.remove('active');
   });
 }
